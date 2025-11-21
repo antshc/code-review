@@ -43,6 +43,8 @@ Code review comments are the main vehicle of knowledge transfer, mentorship, and
 
 **5P Process for evaluating suggestions:**
 
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/0543dd72-89f5-40a9-9451-87c074b2e31d" />
+
 1. **Purpose** – Does it align with the team or business goal?
 2. **Principle** – Is it consistent with coding standards or architecture?
 3. **Practicality** – Is it feasible to implement in scope or time?
