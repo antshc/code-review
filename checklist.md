@@ -49,6 +49,11 @@
 - Are cancellation tokens supported and properly passed through?
 - Is parallelism bounded (no unbounded Task.Run, Parallel.ForEach without limits)?
 
+## async await best practices
+- await every task
+- do not use "async void MethodName(){}" handle safe fire and forget to catch exceptions. note: Check async/await best practices nuget package
+
+
 ## Performance & Memory
 - Any obvious performance issues on hot paths (unnecessary allocations, reflection, LINQ in tight loops)?
 - Are large collections handled carefully (paging, streaming, chunking)?
@@ -59,3 +64,4 @@
 
 ## Resources
 - [Code review checklist](https://github.com/mgreiler/code-review-checklist)
+- [async/await guidance](https://github.com/davidfowl/AspNetCoreDiagnosticScenarios/blob/master/AsyncGuidance.md#concurrentdictionarygetoradd) 
