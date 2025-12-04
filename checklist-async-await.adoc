@@ -1,0 +1,102 @@
+= Async/Await Best Practices (C# .NET 8+)
+
+== 1. Avoid Blocking on Tasks
+* Never use `task.Wait()` or `task.Result`
+* Prefer using `await` all the way down
+* If blocking is unavoidable (legacy scenarios), use:
++
+[source,csharp]
+----
+task.GetAwaiter().GetResult();
+----
+
+== 2. Fire-and-Forget Tasks
+* Avoid unhandled fire-and-forget calls
+* Use helper methods such as `SafeFireAndForget()`
+* Ensure exceptions are observed and logged
+
+== 3. Avoid `return await` When Unnecessary
+* Simplify:
++
+[source,csharp]
+----
+public Task<int> FooAsync() => BarAsync();
+----
+* Use `async`/`await` only when:
+** Wrapping in `try/catch`
+** Using `using` or `await using`
+** Additional logic is required before/after the await
+
+== 4. Use `ConfigureAwait(false)` Appropriately
+* Use when you do NOT need to resume on the captured context
+* Relevant only when a SynchronizationContext exists
+* Frameworks where it matters:
+** ✔ WPF
+** ✔ WinForms
+** ✔ Xamarin
+** ✔ .NET MAUI
+** ✔ WinUI
+** ✔ Blazor (Server)
+** ❌ ASP.NET Core (no classic sync context)
+
+== 5. Use `ConfigureAwait(ConfigureAwaitOptions options)`
+* `ContinueOnCapturedContext` – Attempts to resume on captured thread
+* `ForceYielding` – Forces yielding even if the Task is already complete
+* `SuppressThrowing` – Suppresses exception propagation
+* `None` – Will not return to captured context
+* Options can be combined as flags
+
+== 6. Use `ValueTask` for Optimized Hot Paths
+* Useful when the common execution path completes synchronously
+* Reduces allocations vs. always returning `Task`
+* Be aware of limitations (cannot await multiple times, careful when storing)
+
+== 7. Use `IAsyncEnumerable<T>` for Streaming Scenarios
+* Enables progressive streaming of results
+* Improves UI responsiveness and user experience
+* Use `[EnumeratorCancellation]` to bind cancellation token:
++
+[source,csharp]
+----
+async IAsyncEnumerable<Item> FetchAsync(
+    [EnumeratorCancellation] CancellationToken ct = default)
+{
+}
+----
+
+== 8. Add Cancellation to Non-Cancelable APIs with `WaitAsync`
+* Allows adding timeout/cancellation to Tasks that lack it
+* Example:
++
+[source,csharp]
+----
+await SomeOperationAsync().WaitAsync(ct);
+----
+* Note:
+** Does NOT cancel a completed Task
+** Does NOT cancel underlying operation if API doesn't support cancellation
+
+== 9. Use `IAsyncDisposable` with `await using`
+* For resources requiring async cleanup
++
+[source,csharp]
+----
+await using var stream =
+    new FileStream(path, FileMode.OpenOrCreate).ConfigureAwait(false);
+
+// work with stream
+// DisposeAsync() is awaited at the end of block
+----
+* `CancellationToken` not yet supported for async dispose
+
+== 10. Task Considerations
+* Be careful when using `Task.Run`:
+** Appropriate for CPU-bound parallel work
+** Do not wrap async I/O in `Task.Run`
+* Avoid `ThreadStatic` in async code:
+** Thread switching breaks semantics
+** Use `AsyncLocal<T>` instead
+* Always validate Tasks:
+** Avoid ignoring returned `Task`
+** Ensure exceptions are observed, logged or handled
+
