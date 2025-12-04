@@ -1,0 +1,209 @@
+
+= TPL Dataflow .NET — Common Mistakes (Senior-Level Checklist)
+
+Below is a practical, senior-level checklist of common mistakes when using TPL Dataflow in .NET, including why they happen, symptoms in production, and how to fix them.
+
+---
+
+== 1. Not Setting `BoundedCapacity` → Memory Flood / Out-of-Memory
+
+*Mistake*
+[source,csharp]
+----
+var block = new TransformBlock<Job, Result>(ProcessAsync);
+----
+
+*Symptoms*
+- Unbounded memory growth  
+- No backpressure  
+- Queue grows to tens of thousands of messages  
+
+*Fix*
+[source,csharp]
+----
+var block = new TransformBlock<Job, Result>(
+    ProcessAsync,
+    new ExecutionDataflowBlockOptions
+    {
+        BoundedCapacity = 1000,
+        MaxDegreeOfParallelism = Environment.ProcessorCount
+    });
+----
+
+---
+
+== 2. Forgetting `MaxDegreeOfParallelism` → No Parallelism
+
+*Symptoms*
+- CPU usage extremely low  
+- Pipeline runs sequentially  
+
+*Fix*
+[source,csharp]
+----
+MaxDegreeOfParallelism = Environment.ProcessorCount
+----
+
+---
+
+== 3. Using `Post()` Instead of `SendAsync()` → Silent Message Loss
+
+`Post()` returns `false` when the block is full, causing messages to be lost.
+
+*Fix*
+[source,csharp]
+----
+await block.SendAsync(job);
+----
+
+---
+
+== 4. Not Calling `Complete()` → Pipeline Never Finishes
+
+*Symptoms*
+- `await block.Completion` never returns  
+- Integration tests hang indefinitely  
+
+*Fix*
+[source,csharp]
+----
+input.Complete();
+await output.Completion;
+----
+
+---
+
+== 5. Not Handling Exceptions → Hidden Faults
+
+*Symptoms*
+- Pipeline freezes  
+- `Completion` transitions to faulted silently  
+
+*Fix*
+[source,csharp]
+----
+var block = new TransformBlock<Job, Result>(async job =>
+{
+    try
+    {
+        return await DoWork(job);
+    }
+    catch (Exception ex)
+    {
+        throw;
+    }
+});
+----
+
+---
+
+== 6. Missing `PropagateCompletion` in Links
+
+*Mistake*
+[source,csharp]
+----
+source.LinkTo(target);
+----
+
+*Symptom*
+- Downstream blocks never complete  
+
+*Fix*
+[source,csharp]
+----
+source.LinkTo(target, new DataflowLinkOptions { PropagateCompletion = true });
+----
+
+---
+
+== 7. One Block Doing Too Much Work
+
+Avoid monolithic blocks. Split responsibilities:
+
+Download → Deserialize → Process → Upload
+
+---
+
+== 8. Slow Consumers Causing Backpressure Stalls
+
+If a downstream block is full, upstream `SendAsync` calls wait forever.
+
+*Fixes*
+- Tune bounded capacity  
+- Adjust parallelism  
+- Split heavy processing steps  
+
+---
+
+== 9. CPU-Bound Work on Wrong Scheduler
+
+Avoid blocking async operations. Use async-first delegates.
+
+---
+
+== 10. Using `Task.Run` Inside a Block Delegate
+
+*Bad*
+[source,csharp]
+----
+Task.Run(() => Process(job));
+----
+
+*Why it's bad*
+- Doubles scheduling overhead  
+- Breaks backpressure  
+- Causes thread thrashing  
+
+*Good*
+[source,csharp]
+----
+ProcessAsync(job);
+----
+
+---
+
+== 11. Overusing `BufferBlock`
+
+Prefer specialized blocks:
+- `TransformBlock`
+- `ActionBlock`
+- `BatchBlock`
+- `BroadcastBlock`
+- `WriteOnceBlock`
+
+---
+
+== 12. Incorrect Link Order / Missing Filters
+
+[source,csharp]
+----
+source.LinkTo(block1);
+source.LinkTo(block2);
+----
+→ All messages go to `block1`.
+
+*Fix*
+[source,csharp]
+----
+source.LinkTo(block1, msg => msg.Type == 1);
+source.LinkTo(block2);
+----
+
+---
+
+== 13. Long Synchronous Work Inside Block Delegate
+
+Blocking work dramatically reduces parallelism.
+
+---
+
+== 14. Using Dataflow Inside ASP.NET Request Pipeline
+
+Issues:
+- Backpressure can block request threads  
+- Memory spikes under load  
+- Pipelines outlive request scope  
+
+Use background hosted services instead.
+
+
