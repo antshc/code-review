@@ -100,3 +100,164 @@ await using var stream =
 ** Avoid ignoring returned `Task`
 ** Ensure exceptions are observed, logged or handled
 
+== 11. Prefer `async` All the Way Down
+* Do not create synchronous wrappers over async APIs (sync-over-async)
+** Leads to deadlocks, thread pool starvation and poor scalability
+* If a lower layer is async, keep your higher layers async too
+* Only the true "edge" of the app (e.g., `Main` in console, legacy entry point) may need to block
+
+== 12. Avoid `async void` (Except for Event Handlers)
+* Use `Task` / `Task<T>` return types for async methods
+* `async void`:
+** Cannot be awaited
+** Exceptions crash the process (or go to synchronization context handlers)
+* Acceptable only for:
+** UI event handlers (e.g., button click in WPF/WinForms/MAUI)
+** Some fire-and-forget cases that are wired to global error logging
+
+== 14. Cancellation Tokens Everywhere
+* Prefer APIs that accept `CancellationToken`:
++
+[source,csharp]
+----
+Task DoWorkAsync(CancellationToken cancellationToken = default);
+----
+* Propagate tokens down the call stack
+* Check for `cancellationToken.IsCancellationRequested` in longer operations as needed
+* Use `ThrowIfCancellationRequested()` when appropriate
+
+== 15. Handle Exceptions Explicitly in Async Code
+* Wrap awaited calls in `try/catch` where failures are expected:
++
+[source,csharp]
+----
+try
+{
+    await DoWorkAsync(ct);
+}
+catch (OperationCanceledException)
+{
+    // expected, respect cancellation
+}
+catch (Exception ex)
+{
+    // log and handle
+}
+----
+* Do not swallow exceptions silently
+* For fire-and-forget code, ensure exceptions are logged or reported
+
+== 16. Use `Task.WhenAll` / `Task.WhenAny` for Concurrency
+* When tasks can run in parallel:
++
+[source,csharp]
+----
+var tasks = items.Select(i => ProcessItemAsync(i, ct));
+await Task.WhenAll(tasks);
+----
+* Avoid accidental sequential awaits in loops when concurrency is desired
+* Limit degree of parallelism if the downstream resource can’t handle full fan-out
+
+== 17. Don’t Do Heavy CPU Work Inside Async Methods
+* Async is mainly for I/O-bound work
+* For CPU-bound work on UI / request threads:
+** Move it to the thread pool using `Task.Run` at the **edge**:
++
+[source,csharp]
+----
+await Task.Run(() => CpuBoundWork(), ct);
+----
+* Keep the inner libraries pure (no `Task.Run` inside libraries)
+
+== 18. Avoid Capturing Ambient State Unintentionally
+
+=== ❌ Bad Example (captures entire object and fields)
+[source,csharp]
+----
+public class FileProcessor
+{
+    private readonly byte[] _largeBuffer = new byte[10_000_000]; // 10 MB buffer
+
+    public async Task ProcessFilesAsync(IEnumerable<string> files)
+    {
+        // BAD: The lambda captures `this` and `_largeBuffer`
+        var tasks = files.Select(async file =>
+        {
+            // `_largeBuffer` is captured even if not needed
+            await SaveToStorageAsync(file);
+        });
+
+        await Task.WhenAll(tasks);
+    }
+
+    private Task SaveToStorageAsync(string filePath) =>
+        Task.Delay(10); // simulation
+}
+
+----
+
+=== ✔ Good Example (captures only required data)
+
+[source,csharp]
+----
+public class FileProcessor
+{
+    private readonly byte[] _largeBuffer = new byte[10_000_000]; // 10 MB
+
+    public async Task ProcessFilesAsync(IEnumerable<string> files)
+    {
+        // extract needed data BEFORE entering lambda
+        var tasks = files.Select(file => ProcessSingleFileAsync(file));
+
+        await Task.WhenAll(tasks);
+    }
+
+    private async Task ProcessSingleFileAsync(string filePath)
+    {
+        // Only the parameters are captured — not `this` and not `_largeBuffer`
+        await SaveToStorageAsync(filePath);
+    }
+
+    private Task SaveToStorageAsync(string filePath) =>
+        Task.Delay(10); // simulation
+}
+
+----
+
+=== 👍 Why this is better
+
+* The async method ProcessSingleFileAsync captures only **filePath**, avoiding closure over the entire class.
+* The _largeBuffer and this are not captured unless explicitly used.
+* More efficient memory usage, fewer retained references, smaller state machines.
+
+=== ✔ Better Example (captures only required data)
+[source,csharp]
+----
+public async Task ProcessAsync(IEnumerable<string> files)
+{
+    var tasks = files.Select(ProcessFileAsync); // no closure, no capture
+    await Task.WhenAll(tasks);
+}
+
+private Task ProcessFileAsync(string file) => SaveAsync(file);
+----
+
+=== 👍 Why This Is Better
+* Avoids capturing `this` and large fields unintentionally
+* Produces smaller async state machines
+* Reduces memory usage and garbage collection pressure
+* Eliminates hidden allocations caused by closures
+
+
+== 19. Be Careful with `TaskCompletionSource`
+* Use only when you *must* bridge callback/legacy patterns to `Task`
+* Always specify `TaskCreationOptions.RunContinuationsAsynchronously` to avoid inline re-entrancy issues
+* Complete `TaskCompletionSource` exactly once (success, error, or cancellation)
+
+== 20. Measure Before Optimizing Async Code
+* Async adds overhead; do not over-async everything
+* Use profiling/metrics to:
+** Detect too many small awaits (context switches)
+** Decide when `ValueTask` or batching is actually beneficial
+
+
