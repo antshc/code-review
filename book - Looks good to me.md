@@ -66,7 +66,7 @@ A framework for resolving conflicting “objective” views:
 **Comment signals & categories:**
 
 * Use **MoSCoW** to prioritize: Must / Should / Could / Won’t.
-* Apply **Conventional Comments** prefixes: `question:`, `nit:`, `suggestion:`, `praise:`.
+* Apply **Conventional Comments** prefixes: `question:`, `nit:`, `suggestion:`, `praise:`. https://github.com/antshc/code-review/blob/main/conventional-comments.adoc
 * Combine them to form clear, ordered communication, e.g., `Must – suggestion:` or `Could – question:`.
 
 **The Triple‑R pattern for requesting changes:**
