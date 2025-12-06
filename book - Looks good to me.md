@@ -1,5 +1,56 @@
 ## Communication Qualities in Code Reviews
 
+### Team Working Agreement (TWA) — Short Explanation & Example
+
+#### 🔹 What is a TWA?
+A **Team Working Agreement (TWA)** is a shared set of rules and expectations the team creates together to define **how we work**.  
+It aligns communication, collaboration, and quality standards.
+
+**Easy recall:**  
+👉 *TWA = “How we work together.”*
+
+#### 🔹 What a TWA Is Not
+- Not a process document  
+- Not management rules  
+- Not imposed by one person  
+
+It is **co-created** and evolves with the team.
+
+#### 🔹 What a TWA Usually Covers
+- Communication expectations  
+- PR & code review rules  
+- Meeting etiquette  
+- Quality and Definition of Done  
+- Collaboration norms  
+- Conflict resolution rules  
+
+---
+
+#### 🔹 Example — E-commerce Checkout Squad TWA
+```
+##### **1. Communication**
+- Respond to team messages within 2 working hours.  
+- Use PR comment prefixes: `question:`, `suggestion:`, `nit:`, `praise:`.
+
+##### **2. Pull Requests**
+- PRs must include test results and reasoning.  
+- No withholding approvals without clear feedback. (Withholding approval means **delaying or blocking** a PR **without providing clear, actionable feedback**.  
+This slows delivery and creates friction.)
+
+##### **3. Meetings**
+- Start on time; avoid multitasking.  
+- Document decisions immediately.
+
+##### **4. Work Style**
+- Pair on complex tasks (>1 day).  
+- Ask for help after 30 minutes of being stuck.
+
+##### **5. Quality**
+- Code must follow standards and include unit tests.  
+- A feature is “Done” only after testing in staging.
+```
+
+
 ### 1. Use constructive tone and phrasing (“we” instead of “you”)
 
 **Meaning:**
