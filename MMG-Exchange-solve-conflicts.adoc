@@ -1,0 +1,83 @@
+= MMG Exchange (Meaning–Mechanism–Goal)
+
+MMG Exchange is a framework for resolving technical disagreements by aligning three dimensions:
+
+1. *Meaning* – what each developer believes the problem actually is  
+2. *Mechanism* – how each proposed solution works technically  
+3. *Goal* – what shared outcome both sides want to achieve  
+
+When used correctly, MMG turns conflicts into clear, logical discussions.
+
+== 1. Meaning
+
+Developers often argue about solutions while assuming different interpretations of the same requirement.
+
+=== Example (Banana Catalog Availability)
+
+The system must show real-time banana availability retrieved from the external Banana Warehouse API.
+
+Two developers interpret the issue differently:
+
+*Developer A’s Meaning:*  
+“The problem is that the warehouse API can be slow. The catalog must render immediately and must not block.”
+
+*Developer B’s Meaning:*  
+“The problem is accuracy. Every page load must show the latest availability for all bananas.”
+
+Without clarifying meaning, both will argue about different problems.
+
+== 2. Mechanism
+
+After meaning is clarified, each person explains how their solution works technically.  
+This shifts the discussion from opinions to factual understanding.
+
+=== Example Mechanisms
+
+*Developer A’s Mechanism:*  
+- Render the catalog page immediately.  
+- Show placeholders like _‘Loading availability…’_.  
+- Trigger an async AJAX call to fetch availability for 100 bananas.  
+- Update each banana status dynamically:  
+  **In Stock**, **Out of Stock**, or **Availability Unknown**.
+
+This ensures page rendering is never blocked by the warehouse system.
+
+*Developer B’s Mechanism:*  
+- Fetch all availability on the server before rendering the page.  
+- Backend calls the warehouse API.  
+- Returns a fully populated page with correct statuses.  
+- The user sees the final availability immediately upon load.
+
+Both mechanisms work, but they optimize different things.
+
+== 3. Goal
+
+Once both developers restate the shared goal, disagreements typically dissolve.
+
+=== Shared Goal (Taken from Acceptance Criteria)
+
+“Show accurate availability for every banana while ensuring the catalog page remains responsive even if the warehouse API is slow or fails.”
+
+This aligns both sides:
+
+- Developer A acknowledges accuracy is important.  
+- Developer B acknowledges non-blocking behavior is required.
+
+This often leads to a hybrid or improved solution.
+
+== Final Summary
+
+| Step | Purpose | Example |
+|------|---------|---------|
+| *Meaning* | Clarify what the problem actually is | “Is the issue API slowness or accuracy?” |
+| *Mechanism* | Explain how each solution works | “Async AJAX vs. server-side prefetch.” |
+| *Goal* | Agree on a shared outcome | “Accurate availability + non-blocking UI.” |
+
+== Why MMG Works
+
+- Removes hidden assumptions  
+- Prevents emotional or ego-driven debates  
+- Encourages objective, technical reasoning  
+- Aligns everyone on outcomes, not opinions  
+
+MMG is especially useful in design reviews, PR discussions, and architecture decision meetings.
