@@ -164,7 +164,20 @@ Summarizing outcomes improves traceability, reduces repeated questions, and teac
 **Lesson learned:** Written closure is professional discipline. It transforms transient talk into durable team memory.
 
 ---
+### 7. PR Templates
+PR templates are preset outlines of questions or checklist items that are automatically generated when a PR is created. This is an effective tactic to consistently produce properly prepared PRs. 
+Template example: https://github.com/antshc/code-review/blob/main/pr-description-with-reasoning.md
 
+```text
+- [ ] Description – Why is this change being made?  
+      (Please add any relevant context, history, or decisions related to this feature)
+- [ ] Linked Work Ticket/Issue #
+- [ ] Linked Documentation
+- [ ] Accompanying unit/integration tests included
+- [ ] Testing evidence included
+- [ ] Minimum of 2 reviewers assigned
+```
+---
 ## Main Takeaways
 
 | Principle              | Impact on Culture                          | Measurable Effect                |
