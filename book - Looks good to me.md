@@ -43,7 +43,7 @@ Code review comments are the main vehicle of knowledge transfer, mentorship, and
 
 **5P Process for evaluating suggestions:**
 
-<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/0543dd72-89f5-40a9-9451-87c074b2e31d" />
+<img width="320" height="280" alt="image" src="https://github.com/user-attachments/assets/0543dd72-89f5-40a9-9451-87c074b2e31d" />
 
 1. **Purpose** – Does it align with the team or business goal?
 2. **Principle** – Is it consistent with coding standards or architecture?
@@ -54,7 +54,7 @@ Code review comments are the main vehicle of knowledge transfer, mentorship, and
 
 **MMG Exchange (Meaning–Mechanism–Goal):**
 
-MMG-Exchange explanation: https://github.com/antshc/code-review/blob/main/MMG-Exchange-solve-conflicts.adoc
+Explanation: https://github.com/antshc/code-review/blob/main/MMG-Exchange-solve-conflicts.adoc
 
 A framework for resolving conflicting “objective” views:
 
@@ -70,6 +70,8 @@ A framework for resolving conflicting “objective” views:
 * Combine them to form clear, ordered communication, e.g., `Must – suggestion:` or `Could – question:`.
 
 **The Triple‑R pattern for requesting changes:**
+
+Explanation: https://github.com/antshc/code-review/blob/main/Triple-R%20Pattern%20feedback.adoc
 
 1. **Recognize** – Acknowledge what works well.
 2. **Reason** – Explain why a change helps (context, risk, benefit).
