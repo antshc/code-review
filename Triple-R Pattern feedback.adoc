@@ -1,0 +1,66 @@
+= Triple-R Pattern (Recognize – Reason – Request)
+
+The Triple-R pattern is a structured and respectful method for asking for changes during design discussions, code reviews, or collaboration. It helps keep conversations constructive and focused on shared goals.
+
+== Steps
+
+=== 1. Recognize
+Acknowledge what works well. This reduces defensiveness and shows appreciation.
+
+*Example:*  
+"I like how you optimized the catalog query to reduce load time."
+
+=== 2. Reason
+Explain *why* a change would help — using context, risks, or benefits.
+
+*Example:*  
+"Without caching, the Banana Warehouse API calls may exceed rate limits when the catalog loads 100+ items per page."
+
+=== 3. Request
+Make a specific, actionable, and respectful ask.
+
+*Example:*  
+"Could you add a short-term in-memory cache for the availability responses?"
+
+== E-Commerce Example (Banana Catalog)
+
+=== Recognize
+"Great work on integrating the Banana Warehouse API. The code is clean, and the retries with exponential backoff are well implemented."
+
+=== Reason
+"Right now, the API is called individually for each banana item. Since we load 100 items per page, this may cause slow page rendering and higher API costs. We risk hitting the warehouse rate limits, especially during peak shopping hours."
+
+=== Request
+"Could we batch the API calls or introduce a small caching layer so we reduce the number of external requests per page load?"
+
+== Result
+Using the Triple-R pattern helps the developer feel appreciated and understand the reasoning behind the requested change.  
+It leads to faster agreement, fewer misunderstandings, and a more collaborative code review process.  
+Most importantly, it keeps the conversation focused on the shared technical goal — in this case, a performant and stable catalog page.
+
+== Reusable Template for Code Reviews (Triple-R)
+
+Use this template during PR reviews, design feedback, or architecture discussions.
+
+=== Triple-R Code Review Template
+Recognize:
+<Positive note about what works well or what you appreciate>
+
+Reason:
+<Context explaining why the change helps — risk, performance, readability, maintainability>
+
+Request:
+<Specific, actionable, respectful ask for the change>
+
+
+=== Example Filled Template
+
+Recognize:
+Nice job on the new availability service. The separation of concerns and retry logic look great.
+
+Reason:
+Currently, each banana triggers an individual API call. With 100+ items per page, this can slow down rendering and may exceed Warehouse API limits.
+
+Request:
+Could you introduce batching or a caching layer to reduce the number of outbound calls per catalog load?
+
