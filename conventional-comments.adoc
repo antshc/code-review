@@ -1,0 +1,46 @@
+= Conventional Comments in Pull Requests (Ecommerce Examples)
+
+== Prefix Definitions
+
+* *question:*  
+Used to ask for clarification or confirm assumptions. Not blocking.
+
+* *nit:*  
+A very small, non-blocking improvement such as formatting or naming.
+
+* *suggestion:*  
+A meaningful improvement proposal. Not required, but beneficial.
+
+* *praise:*  
+Positive acknowledgment of good work or clean implementation.
+
+== Ecommerce Examples
+
+=== question:
+question: Why do we hardcode `"EU_STANDARD"` as the default shipping method?  
+Will this impact US/UK customers who have different localized shipping options?
+
+=== nit:
+nit: Minor — consider renaming `CalcShipCost` to `CalculateShippingCost` for clarity.
+
+=== suggestion:
+suggestion: Instead of calling the Warehouse API for each cart item, batch product IDs into a single request to reduce checkout latency.
+
+=== praise:
+praise: Great job extracting the shipping calculator into its own service!  
+This will simplify future changes to shipping rules.
+
+== Full Example (as in a real PR)
+
+----
+praise: Love how you separated shipping logic into `ShippingCostService`.
+Makes the checkout pipeline much cleaner.
+
+question: Why do we apply free shipping only for carts above €50?
+In the requirements doc it says €40 for returning customers — will that be implemented later?
+
+nit: Optional — rename `CalcShipCost` to `CalculateShippingCost` for readability.
+
+suggestion: The API call to get packaging dimensions is repeated several times.
+Consider memoizing by product ID to avoid unnecessary network calls.
+----
