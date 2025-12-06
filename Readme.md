@@ -53,6 +53,8 @@ This slows delivery and creates friction.)
 
 ### 1. Use constructive tone and phrasing (“we” instead of “you”)
 
+Explanation: https://github.com/antshc/code-review/blob/main/tone-of-voice-code-review.adoc
+
 **Meaning:**
 Replace personal or accusatory phrasing (“You forgot to handle nulls”) with collaborative, team-oriented phrasing (“Could we add a null check here?”). It signals shared ownership, reduces defensiveness, and promotes an inclusive learning culture. The tone shapes the team’s emotional safety and directly affects willingness to engage in reviews.
 
