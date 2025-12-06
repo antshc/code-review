@@ -53,6 +53,9 @@ Code review comments are the main vehicle of knowledge transfer, mentorship, and
    If at least three of these Ps are positive, the suggestion is valid to add.
 
 **MMG Exchange (Meaning–Mechanism–Goal):**
+
+MMG-Exchange explanation: https://github.com/antshc/code-review/blob/main/MMG-Exchange-solve-conflicts.adoc
+
 A framework for resolving conflicting “objective” views:
 
 * *Meaning:* clarify what each developer interprets the issue to mean.
