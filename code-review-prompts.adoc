@@ -3,183 +3,116 @@
 :toclevels: 2
 :sectanchors:
 
-This document treats AI instructions as *code artifacts*: explicit, versionable, and reusable.
-Each instruction is written as a parameterized template.
+This document captures AI code review prompts exactly as reusable, copy-pasteable instruction blocks.
+The wording is intentionally kept close to the original text.
 
-== Core Code Review Instructions
+== Core Code Review Prompts
 
 === General Review
 [source,text]
 ----
-Review the following code for:
-- potential bugs
-- performance bottlenecks
-- security vulnerabilities
-- adherence to {LANGUAGE}/{FRAMEWORK} best practices
-
-Constraints:
-- Target audience: {AUDIENCE_LEVEL}
-- Environment: {RUNTIME / OS}
-- Non-goals: {OUT_OF_SCOPE}
-
-Output:
-- Actionable suggestions
-- Explanation for each suggestion
+Review the following code for readability, potential edge cases, and best practices.
 ----
 
-=== Bug & Error Analysis
 [source,text]
 ----
-This code produces the following issue:
-{ERROR_MESSAGE | UNEXPECTED_BEHAVIOR}
+Review the following code for potential bugs, performance bottlenecks, security vulnerabilities, and adherence to [Language/Framework] best practices.
+Provide actionable suggestions and explain your reasoning.
+----
 
-Tasks:
-1. Identify the root cause
-2. Explain why it occurs
-3. Provide a corrected version of the code
-4. Improve error handling and edge-case coverage
+=== Bug & Error Focus
+[source,text]
+----
+This code produces [error/unexpected output].
+Explain the root cause and provide a corrected version with improved error handling.
 ----
 
 === Performance & Optimization
 [source,text]
 ----
-Optimize the following code.
+Optimize this function for O(n) complexity.
+----
 
-Constraints:
-- Target time complexity: {TARGET_COMPLEXITY} (e.g., O(n))
-- Memory constraints: {MEMORY_LIMITS}
-- Concurrency model: {SINGLE_THREADED | MULTI_THREADED}
-
-Tasks:
-1. Analyze current time and space complexity
-2. Propose optimizations (e.g., caching, data structures)
-3. Explain trade-offs between performance and readability
+[source,text]
+----
+Optimize this algorithm for time complexity.
+Suggest improvements like caching or better data structures, and explain the trade-offs.
 ----
 
 === Readability & Style
 [source,text]
 ----
-Refactor the following code.
-
-Rules:
-- Follow {STYLE_GUIDE} (e.g., PEP 8, .NET Coding Guidelines)
-- Improve naming, structure, and modularity
-- Reduce cognitive complexity
-
-Deliverables:
-- Refactored code
-- Short explanation of key changes
+Refactor this code to be more modular, readable, and follow the [Team Style Guide/PEP 8].
+Improve variable names and break down complex logic.
 ----
 
-=== Security Review
+=== Security
 [source,text]
 ----
-Analyze the following code for security risks.
-
-Threat Model:
-- Input source: {USER / API / FILE / NETWORK}
-- Data sensitivity: {LOW | MEDIUM | HIGH}
-
-Check for:
-- Injection vulnerabilities (SQL, XSS, command injection)
-- Insecure deserialization
-- Authentication / authorization flaws
-
-Output:
-- Identified vulnerabilities
-- Concrete mitigation steps
+Analyze this code for common security flaws (e.g., SQL injection, XSS) and suggest specific mitigations.
 ----
 
-== Advanced Instruction Patterns
+== Advanced Techniques & Specific Prompts
 
-=== Explain Code (Junior → Senior)
+=== Explain Legacy or Complex Code
 [source,text]
 ----
-Explain the following {LANGUAGE} code to a junior developer.
+Explain this legacy code to a junior dev.
+----
 
-Steps:
-1. Explain each block and its purpose
-2. Highlight common mistakes
-3. Show a production-grade implementation
-4. Explain why the advanced version is better
+[source,text]
+----
+Explain this [React/Python] code to me as a junior developer, detailing each line and its purpose,
+then show an advanced implementation.
 ----
 
 === Test Generation
 [source,text]
 ----
-Generate unit tests for the following code.
-
-Framework: {TEST_FRAMEWORK} (e.g., xUnit, Jest, Pytest)
-
-Requirements:
-- Cover happy path
-- Cover edge cases
-- Cover failure scenarios
-- Use clear test naming
-
-Output:
-- Complete test file
-----
-
-=== Documentation Generation
-[source,text]
-----
-Generate API documentation from the following code.
-
-Format: AsciiDoc / Markdown
-
-Include:
-- Purpose
-- Parameters
-- Return values
-- Side effects
-- Usage examples
-----
-
-=== Step-by-Step Refactoring (Interactive)
-[source,text]
-----
-Help me refactor this file step by step.
-
-Rules:
-- Do NOT jump ahead
-- Wait for "next" before proceeding
-
-Step 1: Analyze structure and responsibilities
-Step 2: Identify refactoring opportunities
-Step 3: Apply refactorings incrementally
-----
-
-== Instruction Quality Checklist
-
-[source,text]
-----
-CHECKLIST:
-- [ ] Language and framework specified
-- [ ] Clear goal defined
-- [ ] Constraints documented
-- [ ] Output expectations explicit
-- [ ] Trade-offs requested
-----
-
-== Quick Inline Instructions
-
-[source,text]
-----
-Review this code for readability, edge cases, and best practices.
+Generate unit tests using [framework].
 ----
 
 [source,text]
 ----
-Optimize this function to O(n) and explain trade-offs.
+Generate comprehensive unit tests for this function using Jest/Pytest,
+covering edge cases and common inputs.
+----
+
+=== Documentation
+[source,text]
+----
+Generate clean, Markdown-formatted API documentation from this code block,
+explaining parameters, return types, and usage.
+----
+
+=== Step-by-Step Refactoring
+[source,text]
+----
+Help me refactor this file.
+Go step-by-step:
+Step 1: Analyze structure.
+Step 2: Suggest function extraction.
+(Wait for "next" after each step.)
+----
+
+== Prompt Usage Tips (As Instructions)
+
+[source,text]
+----
+Be specific: mention language, framework, and exact goals (e.g., "Python", "Django", "O(n) complexity").
 ----
 
 [source,text]
 ----
-Explain this legacy code to a junior developer.
+Provide examples: include problematic input/output pairs or specific error messages.
 ----
 
 [source,text]
 ----
-Generate unit tests using {FRAMEWORK}.
+Ask for trade-offs: request balanced advice on performance vs. readability.
+----
+
+[source,text]
+----
+Reference guides: attach your team's style guide for consistency.
 ----
