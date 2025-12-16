@@ -1,4 +1,8 @@
 ## General
+````
+Review the following code for potential bugs, performance bottlenecks, security vulnerabilities, and adherence to C# 8 best practices.
+Provide actionable suggestions and explain your reasoning.
+````
 - Does the implementation meet the requirement / spec / user story?
 - Does the implementation do not change the not related existing system behaviour?
 - Can this solution be simplified?
