@@ -30,9 +30,9 @@ It is **co-created** and evolves with the team.
 ```
 ##### **1. Communication**
 - Respond to team messages within 2 working hours.  
-- Use PR comment prefixes: `question:`, `suggestion:`, `nit:`, `praise:`.
 
 ##### **2. Pull Requests**
+- Use PR comment prefixes: `question:`, `suggestion:`, `nit:`, `praise:`.
 - PRs must include test results and reasoning.  
 - No withholding approvals without clear feedback. (Withholding approval means **delaying or blocking** a PR **without providing clear, actionable feedback**.  
 This slows delivery and creates friction.)
