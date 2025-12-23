@@ -157,8 +157,17 @@ Positive reinforcement turns code reviews into *learning moments*, not *judgment
 **Lesson learned:** Praise is a multiplier. Reinforcing good practices makes reviewers *teachers* and authors *motivated learners*.
 
 ---
+### 4. LGTM
 
-### 4. Avoid review anti-patterns: lazy, mean, shape-shifting, and stringent reviews
+**Meaning:**
+LGTM (“Looks Good To Me”) is a review approval that confirms the reviewer has examined the pull request and agrees it can be merged.
+It must include a brief note describing what was reviewed.
+
+**Example:**
+LGTM: reviewed business logic and error handling; tests pass locally.
+
+---
+### 5. Avoid review anti-patterns: lazy, mean, shape-shifting, and stringent reviews
 
 **Meaning:**
 Bad review behaviors destroy trust and slow velocity:
@@ -181,7 +190,7 @@ These patterns cause resentment and process fatigue. Preventing them is a leader
 
 ---
 
-### 5. Move to synchronous discussion after excessive back-and-forth
+### 6. Move to synchronous discussion after excessive back-and-forth
 
 **Meaning:**
 When PR discussions become long threads or circular arguments, shift to real-time conversation (chat, call, pair session). Written async feedback loses nuance and breeds misunderstanding.
@@ -200,7 +209,7 @@ Timely voice conversations speed resolution of design disagreements and preserve
 
 ---
 
-### 6. Summarize offline resolutions in PR comments for transparency
+### 7. Summarize offline resolutions in PR comments for transparency
 
 **Meaning:**
 After an offline or voice discussion, add a summary comment of what was decided, why, and any next steps. This closes the loop and avoids “hidden” decisions that others can’t see.
@@ -217,7 +226,7 @@ Summarizing outcomes improves traceability, reduces repeated questions, and teac
 **Lesson learned:** Written closure is professional discipline. It transforms transient talk into durable team memory.
 
 ---
-### 7. PR Templates
+### 8. PR Templates
 PR templates are preset outlines of questions or checklist items that are automatically generated when a PR is created. This is an effective tactic to consistently produce properly prepared PRs. 
 Template example: https://github.com/antshc/code-review/blob/main/pr-description-with-reasoning.md
 
