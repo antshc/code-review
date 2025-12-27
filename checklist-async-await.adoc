@@ -264,5 +264,6 @@ private Task ProcessFileAsync(string file) => SaveAsync(file);
 - https://learn.microsoft.com/en-us/archive/msdn-magazine/2013/march/async-await-best-practices-in-asynchronous-programming?WT.mc_id=DT-MVP-5000058#configure-context[Async/Await Best Practices – MSDN Magazine]
 - https://learn.microsoft.com/en-us/archive/msdn-magazine/2015/july/async-programming-brownfield-async-development?WT.mc_id=DT-MVP-5000058[Async/Await Best Practices – MSDN Magazine 2015]
 - https://blog.stephencleary.com/2022/03/cancellation-4-polling.html[Cancellation, Part 4: Polling 2022]
+- https://github.com/jeremiahflaga/concurrency-in-csharp-cookbook-2e/tree/main/ConcurrencyInCSharpCookbook2e[github concurrency-in-csharp-cookbook-2e]
 
 
