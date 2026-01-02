@@ -511,6 +511,159 @@ Rule of thumb:
 
 If element nullability matters, make it **explicit** in the type system or enforce initialization immediately.
 
+== 17. Configure System.Text.Json to strictly enforce NRT and collection element nullability (ASP.NET + HttpClient)
+
+=== Challenge
+Nullable Reference Types (NRT) are compile-time checks, but JSON deserialization happens at runtime.
+Without explicit configuration, `System.Text.Json` may deserialize payloads that violate your non-nullable contracts, including:
+- `null` assigned to non-nullable properties
+- missing required constructor parameters
+- `null` elements inside JSON arrays
+
+This creates objects that look safe to the compiler but fail later at runtime.
+
+=== Best practices (with example)
+Enable strict JSON settings so runtime behavior matches your NRT intent, in *both*:
+- inbound API requests (ASP.NET Core)
+- outbound calls to external systems (HttpClient)
+
+==== A) ASP.NET Core (Minimal APIs / Controllers)
+
+*Minimal APIs / HttpClient JSON defaults for the app:*
+
+[source,csharp]
+----
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.RespectNullableAnnotations = true;
+    options.SerializerOptions.RespectRequiredConstructorParameters = true;
+
+    // Optional: insert source-generated or custom resolver first
+    // options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+});
+----
+
+*Controllers:*
+
+[source,csharp]
+----
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.RespectNullableAnnotations = true;
+    options.JsonSerializerOptions.RespectRequiredConstructorParameters = true;
+});
+----
+
+==== B) HttpClient (Typed client + HttpClientFactory) — recommended
+
+Create a shared options instance and use it in your typed client.
+This ensures the same strict behavior for all external HTTP JSON calls.
+
+[source,csharp]
+----
+using System.Net.Http.Json;
+using System.Text.Json;
+
+#nullable enable
+
+public sealed class ExternalApiClient
+{
+    private readonly HttpClient _http;
+    private readonly JsonSerializerOptions _json;
+
+    public ExternalApiClient(HttpClient http)
+    {
+        _http = http;
+
+        _json = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+        {
+            RespectNullableAnnotations = true,
+            RespectRequiredConstructorParameters = true
+        };
+
+        // Optional: if using source-gen context/resolver
+        // _json.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+    }
+
+    public async Task<UserDto> GetUserAsync(string id, CancellationToken ct)
+    {
+        // Strict: will throw if payload violates NRT (null for non-nullable, null array element, etc.)
+        var dto = await _http.GetFromJsonAsync<UserDto>($"/users/{id}", _json, ct)
+                  ?? throw new InvalidDataException("Empty JSON payload");
+
+        return dto;
+    }
+}
+
+public sealed record UserDto(string Id, string[] Roles); // non-nullable contracts
+----
+
+Register as typed client:
+
+[source,csharp]
+----
+builder.Services.AddHttpClient<ExternalApiClient>(c =>
+{
+    c.BaseAddress = new Uri("https://api.example.com");
+});
+----
+
+==== C) HttpClient (Manual) — when you don't use GetFromJsonAsync
+
+If you read the response as a stream/string and call `JsonSerializer.Deserialize`, pass the same strict options.
+
+[source,csharp]
+----
+var json = await http.GetStringAsync("/users/123", ct);
+
+var dto = JsonSerializer.Deserialize<UserDto>(json, _json)
+          ?? throw new InvalidDataException("Invalid JSON payload");
+----
+
+==== Runtime behavior with JSON arrays
+
+Given these settings, element nullability is enforced:
+
+[source,csharp]
+----
+public sealed record Payload(string[] Names);
+----
+JSON:
+[source,json]
+----
+{ "names": ["Alice", null] }
+----
+*Result:* ❌ Deserialization fails (`JsonException`)
+
+[source,csharp]
+----
+public sealed record Payload(string?[] Names);
+----
+JSON:
+[source,json]
+----
+{ "names": ["Alice", null] }
+----
+*Result:* ✅ Deserialization succeeds, element is `null`
+
+The same applies to `List<T>`, `IReadOnlyList<T>`, and constructor parameters.
+
+==== Practical recommendation for external APIs
+Treat external payloads as untrusted:
+- DTOs may be nullable (`string?`, `T?[]`) if the provider can send nulls
+- Map DTOs -> Domain models after validation
+- Keep domain models non-nullable and invariant-driven
+
+=== Why this matters
+This rule closes one of the largest gaps between compile-time nullability intent and runtime data:
+- Invalid payloads are rejected immediately at the boundary (inbound and outbound)
+- Non-nullable contracts are enforced consistently
+- Array/collection element nullability is no longer a hidden blind spot
+
+**Rule of thumb:**
+If `null` is not a valid value (or element), encode that rule in the type system and configure the serializer to fail fast when external data violates it.
+
+
 
 == Rules of Thumb Summary
 
