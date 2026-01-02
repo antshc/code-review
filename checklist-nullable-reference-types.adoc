@@ -663,7 +663,244 @@ This rule closes one of the largest gaps between compile-time nullability intent
 **Rule of thumb:**
 If `null` is not a valid value (or element), encode that rule in the type system and configure the serializer to fail fast when external data violates it.
 
+== 18. When nullable attributes are useful (and which ones)
 
+Nullable Reference Types (`string` vs `string?`) should be your *primary* tool.
+Nullable attributes are needed only when nullability depends on **control flow, conditions,
+or framework behavior** that the compiler cannot infer.
+
+Below are the *legitimate* and *recommended* scenarios for using nullable attributes.
+
+=== 1. Try-patterns (nullability depends on return value)
+
+Use when a method returns a `bool` (or similar flag) that determines whether an output is non-null.
+
+*Attribute:* `NotNullWhen(bool)`
+
+[source,csharp]
+----
+using System.Diagnostics.CodeAnalysis;
+
+public static bool TryGetUser(
+    string id,
+    [NotNullWhen(true)] out User? user)
+{
+    user = FindUser(id);
+    return user is not null;
+}
+----
+
+*Why attribute is needed*  
+The compiler cannot infer that `user` is non-null when the method returns `true`.
+
+---
+
+=== 2. APIs that may return null despite non-nullable type (legacy / interop)
+
+Use when a method must keep a non-nullable return type for compatibility but may return `null`.
+
+*Attribute:* `MaybeNull` (return or member)
+
+[source,csharp]
+----
+using System.Diagnostics.CodeAnalysis;
+
+[return: MaybeNull]
+public T GetOrDefault<T>()
+{
+    return default;
+}
+----
+
+*Why attribute is needed*  
+The method signature alone lies about nullability; the attribute corrects the contract.
+
+---
+
+=== 3. Lazy initialization / post-condition guarantees
+
+Use when a method ensures that certain members are initialized after it runs.
+
+*Attribute:* `MemberNotNull`
+
+[source,csharp]
+----
+using System.Diagnostics.CodeAnalysis;
+
+private string? _token;
+
+[MemberNotNull(nameof(_token))]
+private void EnsureToken()
+{
+    _token ??= LoadToken();
+    if (_token is null)
+        throw new InvalidOperationException("Token unavailable");
+}
+
+public string GetToken()
+{
+    EnsureToken();
+    return _token; // compiler knows this is non-null
+}
+----
+
+*Why attribute is needed*  
+The compiler cannot see through method side effects on fields.
+
+---
+
+=== 4. Conditional member initialization
+
+Use when members are initialized only if a method returns a specific value.
+
+*Attribute:* `MemberNotNullWhen(bool, ...)`
+
+[source,csharp]
+----
+using System.Diagnostics.CodeAnalysis;
+
+private string? _cache;
+
+[MemberNotNullWhen(true, nameof(_cache))]
+public bool TryInitialize()
+{
+    _cache = LoadCache();
+    return _cache is not null;
+}
+----
+
+*Why attribute is needed*  
+Initialization depends on a condition the compiler cannot track.
+
+---
+
+=== 5. Parameters that may be null on input but are validated
+
+Use when a method validates or normalizes a parameter so it is non-null afterward.
+
+*Attribute:* `NotNull`
+
+[source,csharp]
+----
+using System.Diagnostics.CodeAnalysis;
+
+public void Validate([NotNull] string? value)
+{
+    if (value is null)
+        throw new ArgumentNullException(nameof(value));
+
+    // value is non-null here
+}
+----
+
+*Why attribute is needed*  
+The compiler does not assume validation logic makes parameters non-null.
+
+---
+
+=== 6. Setters that accept null but normalize internally
+
+Use when a property setter accepts `null` but the backing storage is non-null.
+
+*Attribute:* `AllowNull`
+
+[source,csharp]
+----
+using System.Diagnostics.CodeAnalysis;
+
+private string _name = "";
+
+public string Name
+{
+    get => _name;
+    [AllowNull]
+    set => _name = value ?? "";
+}
+----
+
+*Why attribute is needed*  
+The public contract allows `null`, but internal state remains non-null.
+
+---
+
+=== 7. Setters that reject null even if type is nullable
+
+Use when a property type is nullable but null is not allowed in practice.
+
+*Attribute:* `DisallowNull`
+
+[source,csharp]
+----
+using System.Diagnostics.CodeAnalysis;
+
+private string? _title;
+
+public string? Title
+{
+    get => _title;
+    [DisallowNull]
+    set => _title = value ?? throw new ArgumentNullException(nameof(value));
+}
+----
+
+*Why attribute is needed*  
+The type allows `null`, but the setter enforces stricter rules.
+
+---
+
+=== 8. Output values with conditional nullability
+
+Use when an output value is null only under specific conditions.
+
+*Attribute:* `MaybeNullWhen(bool)`
+
+[source,csharp]
+----
+using System.Diagnostics.CodeAnalysis;
+
+public static bool TryParseInt(
+    string text,
+    [MaybeNullWhen(false)] out int? value)
+{
+    if (int.TryParse(text, out var v))
+    {
+        value = v;
+        return true;
+    }
+
+    value = null;
+    return false;
+}
+----
+
+*Why attribute is needed*  
+Nullability depends on the method result, not the type alone.
+
+---
+
+=== Summary guidance
+
+* Use `?` in the type for **structural nullability**
+* Use attributes for **flow-dependent nullability**
+* Avoid attributes as a way to silence warnings
+* Prefer validation and mapping at boundaries
+
+Nullable attributes are **precision tools**.  
+Used correctly, they strengthen NRT.  
+Used casually, they weaken it.
+
+=== Attribute quick reference
+
+| Attribute | When to use |
+|----------|-------------|
+| `NotNullWhen(bool)` | Output is non-null only if condition is met |
+| `MaybeNullWhen(bool)` | Output may be null only if condition is met |
+| `MemberNotNull` | Method guarantees member(s) initialized |
+| `MemberNotNullWhen` | Member initialized only on specific result |
+| `MaybeNull` | Return/property may be null despite non-nullable type |
+| `NotNull` | Parameter guaranteed non-null after method (rare) |
+| `AllowNull` | Setter accepts null but storage is non-null |
+| `DisallowNull` | Setter rejects null even if type is nullable |
 
 == Rules of Thumb Summary
 
