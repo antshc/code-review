@@ -902,7 +902,7 @@ Used casually, they weaken it.
 | `AllowNull` | Setter accepts null but storage is non-null |
 | `DisallowNull` | Setter rejects null even if type is nullable |
 
-== Video resources
+== Resources
 
 * https://www.youtube.com/watch?v=8-2xr_kBRnQ[Nullable Reference Types in C# — Practical Overview]
 * https://www.youtube.com/watch?v=7_yc9mfyCqk[Deep Dive: Nullable Reference Types and Flow Analysis]
