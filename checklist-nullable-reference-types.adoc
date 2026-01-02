@@ -330,6 +330,96 @@ var id = dto.Id?.Trim()
 === Why this matters
 Silent defaults turn data issues into business bugs.
 
+== 15. Be careful with structs that contain reference-type fields
+
+=== Challenge
+When a `struct` contains reference-type fields, initializing it with `default` (or `new()` without arguments) does *not* trigger nullable warnings — even when Nullable Reference Types are enabled.
+
+This can silently introduce `null` values into code that appears safe.
+
+=== Best practices (with example)
+
+[source,csharp]
+----
+#nullable enable
+
+public struct CacheEntry
+{
+    public string Key;     // reference type
+    public byte[] Buffer;  // reference type
+}
+
+// No compiler warning here
+CacheEntry entry = default;
+
+// Runtime NullReferenceException risk
+int length = entry.Key.Length;
+----
+
+Why this happens:
+- `struct` default initialization zeroes all fields
+- reference-type fields become `null`
+- NRT analysis does **not** warn on `default(struct)` usage
+
+==== Recommended patterns
+
+*Avoid reference-type fields in structs*  
+Prefer `class` or `record class` when references are required.
+
+[source,csharp]
+----
+public sealed class CacheEntry
+{
+    public required string Key { get; init; }
+    public required byte[] Buffer { get; init; }
+}
+----
+
+*If struct is required (performance / interop), enforce full initialization*
+
+[source,csharp]
+----
+public readonly struct CacheEntry
+{
+    public string Key { get; }
+    public byte[] Buffer { get; }
+
+    public CacheEntry(string key, byte[] buffer)
+    {
+        Key = key ?? throw new ArgumentNullException(nameof(key));
+        Buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
+    }
+}
+----
+
+*Avoid `default` usage explicitly*
+
+[source,csharp]
+----
+CacheEntry entry = new CacheEntry("key", data); // safe
+// CacheEntry entry = default; // avoid
+----
+
+*Optionally add runtime guard (debug builds)*
+
+[source,csharp]
+----
+public void Validate()
+{
+    Debug.Assert(Key != null);
+    Debug.Assert(Buffer != null);
+}
+----
+
+=== Why this matters
+This is one of the **most dangerous NRT blind spots**:
+- No compiler warning
+- Looks safe at call site
+- Fails later with `NullReferenceException`
+
+In high-reliability systems, structs with reference-type fields should be treated as *unsafe by default* unless construction is strictly controlled.
+
+
 == Rules of Thumb Summary
 
 * External inputs: nullable + validate + map
