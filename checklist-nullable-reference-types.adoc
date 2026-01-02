@@ -902,10 +902,8 @@ Used casually, they weaken it.
 | `AllowNull` | Setter accepts null but storage is non-null |
 | `DisallowNull` | Setter rejects null even if type is nullable |
 
-== Rules of Thumb Summary
+== Video resources
 
-* External inputs: nullable + validate + map
-* Internal domain: non-null by default
-* Avoid spreading `?` in core logic
-* Minimize `!`
-* Never return null collections
+* https://www.youtube.com/watch?v=8-2xr_kBRnQ[Nullable Reference Types in C# — Practical Overview]
+* https://www.youtube.com/watch?v=7_yc9mfyCqk[Deep Dive: Nullable Reference Types and Flow Analysis]
+* https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references[Nullable reference types (Microsoft Learn)]
