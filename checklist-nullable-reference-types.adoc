@@ -1,0 +1,339 @@
+= C# Nullable Reference Types (NRT) – Best Practices Cheat Sheet
+:toc:
+:toclevels: 2
+:sectnums:
+
+This cheat sheet focuses on best practices when *Nullable Reference Types* are enabled in C#, especially when dealing with *external systems* such as REST APIs (JSON), databases, configuration, and third-party libraries.
+
+== 1. Treat external input as nullable by default
+
+=== Challenge
+External systems may return missing fields, `null` values, empty strings, or unexpected payload shapes — even if documentation claims otherwise.
+
+=== Best practices (with example)
+Model inbound data with nullable properties and validate at the boundary before mapping to internal models.
+
+[source,csharp]
+----
+#nullable enable
+
+public sealed record ExternalUserDto(
+    string? Id,
+    string? Email,
+    string? Name
+);
+
+public sealed record User(
+    string Id,
+    string Email,
+    string Name
+);
+
+public static class UserMapper
+{
+    public static User ToDomain(ExternalUserDto dto)
+    {
+        var id = dto.Id?.Trim();
+        var email = dto.Email?.Trim();
+        var name = dto.Name?.Trim();
+
+        if (string.IsNullOrEmpty(id))
+            throw new InvalidDataException("User.Id is missing");
+
+        if (string.IsNullOrEmpty(email))
+            throw new InvalidDataException("User.Email is missing");
+
+        if (string.IsNullOrEmpty(name))
+            name = "(unknown)";
+
+        return new User(id, email, name);
+    }
+}
+----
+
+=== Why this matters
+Null-handling stays *localized at the boundary*. The rest of the codebase can rely on non-null invariants and avoid defensive checks.
+
+== 2. Use boundary validation and internal invariants
+
+=== Challenge
+Spreading nullable reference types throughout the domain leads to excessive `?.`, `??`, and fragile logic.
+
+=== Best practices (with example)
+Validate once at the boundary, then enforce non-null invariants internally.
+
+[source,csharp]
+----
+public sealed class Order
+{
+    public string OrderId { get; }
+    public string CustomerId { get; }
+
+    public Order(string orderId, string customerId)
+    {
+        OrderId = string.IsNullOrWhiteSpace(orderId)
+            ? throw new ArgumentException("orderId is required", nameof(orderId))
+            : orderId;
+
+        CustomerId = string.IsNullOrWhiteSpace(customerId)
+            ? throw new ArgumentException("customerId is required", nameof(customerId))
+            : customerId;
+    }
+}
+----
+
+=== Why this matters
+Internal code becomes simpler, safer, and easier to reason about because invariants are guaranteed.
+
+== 3. Use `required` for internal models, avoid it for external DTOs
+
+=== Challenge
+`required` members can be bypassed by deserializers and external frameworks.
+
+=== Best practices (with example)
+Use `required` only where object creation is fully under your control.
+
+[source,csharp]
+----
+public sealed class InternalConfig
+{
+    public required string Endpoint { get; init; }
+    public required string ApiKey { get; init; }
+}
+----
+
+External DTOs should remain nullable and validated explicitly.
+
+=== Why this matters
+You get compile-time safety without relying on runtime deserialization guarantees.
+
+== 4. Avoid the null-forgiving operator (`!`) except with proof
+
+=== Challenge
+The null-forgiving operator suppresses warnings and can hide real bugs.
+
+=== Best practices (with example)
+Prefer explicit checks or pattern matching.
+
+[source,csharp]
+----
+if (dto.Email is null)
+    throw new InvalidDataException("Email missing");
+
+var email = dto.Email; // non-null here
+----
+
+If unavoidable, document the invariant clearly.
+
+[source,csharp]
+----
+var userName = httpContext.User.Identity!.Name!;
+// Identity and Name are guaranteed for authenticated requests
+----
+
+=== Why this matters
+Uncontrolled use of `!` defeats the purpose of nullable reference types.
+
+== 5. Guard public APIs aggressively
+
+=== Challenge
+Public methods are called by code you do not control.
+
+=== Best practices (with example)
+Use built-in guard helpers.
+
+[source,csharp]
+----
+public void Process(User user)
+{
+    ArgumentNullException.ThrowIfNull(user);
+}
+----
+
+Validate strings and value semantics explicitly.
+
+=== Why this matters
+Fail-fast behavior improves diagnostics and prevents deep null-reference failures.
+
+== 6. Use `Try*` patterns for messy external data
+
+=== Challenge
+External systems may return invalid but non-null values.
+
+=== Best practices (with example)
+Use parsing helpers that distinguish invalid from missing.
+
+[source,csharp]
+----
+public static int? ParseAgeOrNull(string? raw)
+    => int.TryParse(raw, out var v) ? v : null;
+----
+
+=== Why this matters
+Avoids conflating invalid data with valid defaults.
+
+== 7. Match database nullability explicitly
+
+=== Challenge
+Database schemas often allow nulls that do not map cleanly to domain rules.
+
+=== Best practices (with example)
+Reflect DB nullability in data models and map to domain types.
+
+[source,csharp]
+----
+public sealed class UserRow
+{
+    public string Id { get; set; } = default!;
+    public string? MiddleName { get; set; }
+}
+
+public sealed record UserDomain(string Id, string MiddleName);
+
+public static UserDomain ToDomain(UserRow row)
+{
+    ArgumentNullException.ThrowIfNull(row);
+    return new UserDomain(row.Id, row.MiddleName ?? "");
+}
+----
+
+=== Why this matters
+Separates persistence concerns from domain invariants.
+
+== 8. Validate JSON after deserialization
+
+=== Challenge
+JSON deserializers may ignore missing fields or silently coerce values.
+
+=== Best practices (with example)
+Always validate deserialized objects.
+
+[source,csharp]
+----
+var dto = JsonSerializer.Deserialize<ExternalUserDto>(json)
+          ?? throw new InvalidDataException("Invalid JSON payload");
+----
+
+=== Why this matters
+Deserializer configuration does not replace business validation.
+
+== 9. Never return null collections
+
+=== Challenge
+Null collections force null checks at every call site.
+
+=== Best practices (with example)
+Default missing collections to empty ones.
+
+[source,csharp]
+----
+var items = dto.Items ?? new List<string>();
+----
+
+Prefer `IReadOnlyList<T>` or immutable collections in APIs.
+
+=== Why this matters
+Eliminates an entire class of null-reference errors.
+
+== 10. Use guard helpers to keep mapping readable
+
+=== Challenge
+Boundary validation can become verbose and repetitive.
+
+=== Best practices (with example)
+Centralize validation logic.
+
+[source,csharp]
+----
+public static class Guard
+{
+    public static string Required(string? value, string name)
+        => string.IsNullOrWhiteSpace(value)
+            ? throw new InvalidDataException($"{name} is required")
+            : value;
+}
+----
+
+=== Why this matters
+Improves consistency and readability across the codebase.
+
+== 11. Model domain states explicitly instead of using null
+
+=== Challenge
+`null` often conflates multiple meanings (missing, unknown, invalid).
+
+=== Best practices (with example)
+Use enums or explicit state objects.
+
+[source,csharp]
+----
+public enum AvailabilityState
+{
+    InStock,
+    OutOfStock,
+    Unknown
+}
+----
+
+=== Why this matters
+Makes invalid states unrepresentable and logic clearer.
+
+== 12. Keep nullable warnings meaningful
+
+=== Challenge
+Too many warnings lead to warning fatigue and ignored diagnostics.
+
+=== Best practices
+- Enable NRT globally: `<Nullable>enable</Nullable>`
+- Fix warnings in new or modified code
+- Use targeted suppressions with justification
+
+=== Why this matters
+Nullable reference types only add value when warnings are trusted.
+
+== 13. Annotate public APIs accurately
+
+=== Challenge
+Consumers rely on your annotations for correctness.
+
+=== Best practices (with example)
+Be explicit in return types.
+
+[source,csharp]
+----
+public string? TryGetDisplayName(User user);
+public string GetId(User user);
+----
+
+=== Why this matters
+Improves correctness and usability for downstream consumers.
+
+== 14. Avoid masking bugs with default values
+
+=== Challenge
+Blindly applying defaults can hide data-quality issues.
+
+=== Best practices (with example)
+Default only when acceptable; otherwise fail fast.
+
+[source,csharp]
+----
+var nickname = dto.Nickname?.Trim() ?? "(none)";
+----
+
+[source,csharp]
+----
+var id = dto.Id?.Trim()
+    ?? throw new InvalidDataException("Id missing");
+----
+
+=== Why this matters
+Silent defaults turn data issues into business bugs.
+
+== Rules of Thumb Summary
+
+* External inputs: nullable + validate + map
+* Internal domain: non-null by default
+* Avoid spreading `?` in core logic
+* Minimize `!`
+* Never return null collections
