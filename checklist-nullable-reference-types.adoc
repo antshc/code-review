@@ -419,6 +419,98 @@ This is one of the **most dangerous NRT blind spots**:
 
 In high-reliability systems, structs with reference-type fields should be treated as *unsafe by default* unless construction is strictly controlled.
 
+== 16. Arrays do not protect you from null elements
+
+=== Challenge
+When an array is created, its elements are initialized with default values.
+For reference types, this means **each element is `null`**, and **Nullable Reference Types do not warn** about this.
+
+This creates a false sense of safety: the array itself is non-null, but its elements are not.
+
+=== Best practices (with example)
+
+[source,csharp]
+----
+#nullable enable
+
+string[] names = new string[3]; // No compiler warning
+
+// Runtime NullReferenceException
+int length = names[0].Length;
+----
+
+Why this happens:
+- Arrays are zero-initialized
+- Reference-type elements default to `null`
+- NRT tracks the array reference, not per-element initialization
+
+==== Recommended patterns
+
+*Always initialize array elements explicitly*
+
+[source,csharp]
+----
+var names = new string[3];
+for (int i = 0; i < names.Length; i++)
+{
+    names[i] = string.Empty;
+}
+----
+
+*Prefer collection initializers when possible*
+
+[source,csharp]
+----
+string[] names = { "Alice", "Bob", "Charlie" };
+----
+
+*Use nullable element types when null is a valid state*
+
+[source,csharp]
+----
+string?[] names = new string?[3];
+----
+
+This forces callers to acknowledge the possibility of null elements.
+
+*Prefer immutable or read-only collections for safety*
+
+[source,csharp]
+----
+IReadOnlyList<string> names = new List<string> { "Alice", "Bob" };
+----
+
+*Encapsulate arrays behind validated APIs*
+
+[source,csharp]
+----
+public sealed class NameList
+{
+    private readonly string[] _names;
+
+    public NameList(string[] names)
+    {
+        if (names.Any(n => n is null))
+            throw new ArgumentException("Array contains null element");
+
+        _names = names;
+    }
+
+    public string this[int index] => _names[index];
+}
+----
+
+=== Why this matters
+This is another **NRT blind spot**:
+- No compiler warning
+- Very common with buffers, caches, and DTOs
+- Failures occur far from the allocation site
+
+Rule of thumb:
+*Arrays guarantee size, not element validity.*
+
+If element nullability matters, make it **explicit** in the type system or enforce initialization immediately.
+
 
 == Rules of Thumb Summary
 
