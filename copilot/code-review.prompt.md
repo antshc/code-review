@@ -34,14 +34,7 @@ C) FINDINGS (only FAIL or NEEDS-REVIEW, ordered by severity)
   Reason:
   Fix:
 
-D) CWE CHECKLIST RESULT (ONE LINE PER CWE)
-Format exactly:
-CWE-15: PASS
-CWE-22: FAIL
-CWE-41: N-A
-...
-
-E) FIX-FIRST (TOP 5)
+D) FIX-FIRST (TOP 5)
 - CWE-XXX – short fix instruction
 
 IMPORTANT RULES
