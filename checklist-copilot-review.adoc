@@ -1,0 +1,3 @@
+== Resources
+* https://sonarsource.github.io/rspec/#/rspec/?lang=csharp&tags=cwe[sonar qube rules csharp]
+* https://cwe.mitre.org/data/definitions/699.html[cwe mitre]
